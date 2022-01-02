@@ -51,11 +51,11 @@ do
 
 ((PAGE++))
 
-FILTER="egrep -iv (\.svg|\.jpg|\.png|\.gif|\.pdf|\.docx|/LICENSE)$"
+GREPFILTER="egrep -iv (\.svg|\.jpg|\.png|\.gif|\.pdf|\.docx|/LICENSE)$"
 echo "Trying to fetch data for page no. $PAGE"
 URLS=$(curl -s "https://github.com/search?p=$PAGE&$PAYLOAD" -H\
  "Cookie: user_session=9M328YcwZT-JNLrIkgRpIOxOvk7jrwtERf__5RwaMQkjKbCO" |\
-egrep -oi "https://github[0-9A-Za-z\!/\._%-]+" | egrep "blob|commit"|$FILTER| sed 's/\/blob\//\/raw\//'|sort -u|\
+egrep -oi "https://github[0-9A-Za-z\!/\._%-]+" | egrep "blob|commit"|$GREPFILTER| sed 's/\/blob\//\/raw\//'|sort -u|\
 awk '{if ($0 ~ /\/commit\//) sub(/$/,".patch"); print  }'  |\
 tee -a $MYPATH/Results/$ALLURLS )
 
