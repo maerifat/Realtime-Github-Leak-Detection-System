@@ -9,8 +9,9 @@ if __name__ == '__main__':
     findingscount= sys.argv[3]
     reporturl= sys.argv[4]
     assetname= sys.argv[5]
+    developeremail= sys.argv[6]
 
-    message = (f"*Asset:* {assetname} \n *Commit Type:* Code \n *Developer:* {developerurl} \n *FileURL:* {fileurl} \n *Sensitive Findings:* {findingscount}")
+    message = (f"*Asset:* {assetname} \n *Commit Type:* Code \n *Developer:* {developerurl} \n *Developer Email:* {developeremail} \n *FileURL:* {fileurl} \n *Sensitive Findings:* {findingscount}")
     title = ("Developer has committed  Org code on Public Github repo.")
 
     slack_data = {
