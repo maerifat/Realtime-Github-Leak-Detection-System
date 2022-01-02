@@ -146,8 +146,31 @@ else
 	#Sending report only if Significant findings
         if (($FINDINGSCOUNT <2222))
 	then 
-		aws s3 cp $MYPATH/Results/$REPORTFILE s3://appsec-js-scanner/
-		REPORTURL=$(aws s3 presign s3://appsec-js-scanner/$REPORTFILE --expires-in 604800)
+
+
+
+
+		###PDF generation
+		REPORTFILEHTML=${QUERY}_${RANDOM}_${RANDOM}_instantreport_`date +"%Y-%m-%d"`.html
+		REPORTFILEPDF=${QUERY}_${RANDOM}_${RANDOM}_instantreport_`date +"%Y-%m-%d"`.pdf
+		REPORTFILEHTMLFINAL=${QUERY}_${RANDOM}_${RANDOM}_instantreport_`date +"%Y-%m-%d"`.html
+
+
+		cat $MYPATH/Results/$REPORTFILE|awk -F "->" '$0 ~ "\] URL:" \
+		{$0="<em>&nbsp;</em><div style=\"color:blue;font-size:20px;background-color:gold;text-decoration: underline;padding: 5px\">"$0"</div></br>";print $0};\
+		$0 ~ "->" {$1="<em>&nbsp;</em><span style=\"color:green;font-size:25px\">"$1"</span>->";};\
+		$0 ~ "->" {$2="<span style=\"color:red;font-size:25px\">"$2"</span></br>";\
+		print}'>$MYPATH/Results/$REPORTFILEHTML
+
+		cat $MYPATH/template.html $MYPATH/Results/$REPORTFILEHTML > $MYPATH/Results/$REPORTFILEHTMLFINAL
+
+        	wkhtmltopdf  -O Landscape  $MYPATH/Results/$REPORTFILEHTMLFINAL $MYPATH/Results/$REPORTFILEPDF
+
+
+
+		##Report uploading and report passing to slack.
+		aws s3 cp $MYPATH/Results/$REPORTFILEPDF s3://appsec-js-scanner/
+		REPORTURL=$(aws s3 presign s3://appsec-js-scanner/$REPORTFILEPDF --expires-in 604800)
         	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY $DEVELOPEREMAIL
 	fi
 
@@ -155,8 +178,9 @@ else
 	echo $URL>> $MYPATH/scannedurls.txt
 	echo $DIGEST >> $MYPATH/digestdb.txt
 	rm $MYPATH/Results/$REPORTFILE
-	
-	
+	rm  $MYPATH/Results/$REPORTFILEHTML
+	rm $MYPATH/Results/$REPORTFILEHTMLFINAL
+	rm $MYPATH/Results/$REPORTFILEPDF
 	
 
 fi
