@@ -119,17 +119,36 @@ REPORTFILE=${RANDOM}${RANDOM}_instantreport_`date +"%Y-%m-%d"`.txt
 if (`grep -Fxq $URL $MYPATH/scannedurls.txt` && `grep -Fxq $DIGEST $MYPATH/digestdb.txt`)   || `grep -iq $URL blacklist.txt`
 then
         echo "$URL has been alreay Scanned" 
+
 	continue
 else
 	python3 SecretFinder.py -i $URL -o cli| tee $MYPATH/Results/$REPORTFILE
 	FILEURL=`echo $URL|sed 's/\/raw\//\/blob\//'`
 	FINDINGSCOUNT=$(egrep "\s+\->\s+" $MYPATH/Results/$REPORTFILE|wc -l)
 
+
+
+
+
+	##Developer email
+
+
+	COMMITURL=`echo $URL| egrep -io  "https://github[0-9A-Za-z\!/\._%-]+/raw/[a-fA-F0-9]+" |sed 's/\/raw\//\/commit\//'| sed 's/$/\.patch/'`
+	DEVELOPEREMAIL=`curl -s $COMMITURL -L|sed -n 2p|awk '{print $NF}'|tr -d "><"`
+	if ! grep "@" <<< $DEVELOPEREMAIL
+	then 
+               DEVELOPEREMAIL="NA"
+	fi
+
+	##
+
+
+	#Sending report only if Significant findings
         if (($FINDINGSCOUNT <2222))
 	then 
 		aws s3 cp $MYPATH/Results/$REPORTFILE s3://appsec-js-scanner/
 		REPORTURL=$(aws s3 presign s3://appsec-js-scanner/$REPORTFILE --expires-in 604800)
-        	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY
+        	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY $DEVELOPEREMAIL
 	fi
 
 	echo "$FINDINGSCOUNT are the total findings"
