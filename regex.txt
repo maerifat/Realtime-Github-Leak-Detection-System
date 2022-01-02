@@ -4,7 +4,7 @@
   #####333  'Password' : r'password is\s*[`=:\"]*\s*[^\s]+|',
    # 'Password' : r'password\s*[`=:\"]+\s*[^\s]+|',
    # 'Password' : r'pwd\s*[`=:\"]*\s*[^\s]+|',
-    'subdomain' : r'[A-Za-z_0-9\.\-]+(whjr\.one|whjr\.dev|byjusfutureschool\.com|whitehatjr\.com|whjr\.education|whjr\.co|whjr\.cards)',
+    'subdomain' : r'[A-Za-z_0-9\.\-]+(whxxxjr\.one|wxxxhjr\.dev|byjusxxxfutureschool\.com|whitexxxxhatjr\.com|whxxxjr\.education|whxxxjr\.co|whxxxjr\.cards)',
     'IP Address' : r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}',
 #    'HTTP url' : r'http[s]?://[a-zA-Z0-9\-\._\/\+\%\#\%\?=:]+',
     's3' :  r'[a-zA-Z0-9-\.\_]+\.s3\.amazonaws\.com',
