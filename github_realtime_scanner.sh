@@ -1,10 +1,10 @@
 #!/bin/bash
 
-
+echo "WARMING UP - `date`"
 
 
 #Defining Variables
-MYPATH="/appsec/github/Github_Realtime"
+MYPATH="/appsec/STAGE/github/Github_Realtime"
 
 QUERY=$1
 FILTER="o=desc&s=indexed&type=Code"
@@ -27,7 +27,7 @@ echo $PAYLOAD
 
 #running script
 COUNT=`curl "https://github.com/search/count?$PAYLOAD" -Ls \
--H "Cookie: user_session=9M328YcwZT-JNLrIkgRpIOxOvk7jrwtERf__5RwaMQkjKbCO"\
+-H "Cookie: user_session=QGrX8jUE8RlH7yL2UJyCPJwBeVQ5QRoBwrYpzIj0eWpZK1Tx"\
 |egrep -o ">[0-9KMB]+"| tr -d "><" | sed 's/K/000/' |\
 sed 's/M/000000/' | sed 's/B/000000000/'`
 
@@ -54,7 +54,7 @@ do
 GREPFILTER="egrep -iv (\.svg|\.jpg|\.png|\.gif|\.pdf|\.docx|/LICENSE)$"
 echo "Trying to fetch data for page no. $PAGE"
 URLS=$(curl -s "https://github.com/search?p=$PAGE&$PAYLOAD" -H\
- "Cookie: user_session=9M328YcwZT-JNLrIkgRpIOxOvk7jrwtERf__5RwaMQkjKbCO" |\
+ "Cookie: user_session=QGrX8jUE8RlH7yL2UJyCPJwBeVQ5QRoBwrYpzIj0eWpZK1Tx" |\
 egrep -oi "https://github[0-9A-Za-z\!\%/\._\)\(-]+" | egrep "blob|commit"|$GREPFILTER| sed 's/\/blob\//\/raw\//'|sort -u|\
 awk '{if ($0 ~ /\/commit\//) sub(/$/,".patch"); print  }'  |\
 tee -a $MYPATH/Results/$ALLURLS )
@@ -100,7 +100,7 @@ echo " "
 
 
 
-echo "####### SCANNING HAS BEGUN ####### "
+echo "####### SCANNING HAS BEGUN  ####### "
 
 
 
@@ -117,12 +117,20 @@ REPORTFILE=${RANDOM}${RANDOM}_instantreport_`date +"%Y-%m-%d"`.txt
 
 
 #echo "$DEVELOPER is developer"
-if `grep -Fxq $URL $MYPATH/scannedurls.txt`  || `grep -iq $DEVELOPER  $MYPATH/blacklist.txt`
+
+ISTHERE=$(cat $MYPATH/Results/${QUERY}_scannedurls.txt)
+
+#echo  "$URL is url"
+#echo $ISTHERE
+#echo "$ISTHERE is isthere"
+
+if grep  "$URL" <<<  "$ISTHERE" ;
+## || egrep -iq $DEVELOPER  $MYPATH/blacklist.txt;
 then
         echo "$URL has been alreay Scanned" 
 
-	continue
-else
+elif [[ ! "$ISTHERE" =~ "$URL" ]];
+	then
 	python3 SecretFinder.py -i $URL -o cli| tee $MYPATH/Results/$REPORTFILE
 	FILEURL=`echo $URL|sed 's/\/raw\//\/blob\//'`
 	FINDINGSCOUNT=$(egrep "\s+\->\s+" $MYPATH/Results/$REPORTFILE|wc -l)
@@ -172,7 +180,7 @@ else
 		##Report uploading and report passing to slack.
 		aws s3 cp $MYPATH/Results/$REPORTFILEPDF s3://appsec-js-scanner/
 		REPORTURL=$(aws s3 presign s3://appsec-js-scanner/$REPORTFILEPDF --expires-in 604800)
-#        	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY $DEVELOPEREMAIL
+        	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY $DEVELOPEREMAIL
 
 		
 		#Removing Result files
@@ -186,7 +194,7 @@ else
 	fi
 
 	echo "$FINDINGSCOUNT are the total findings"
-	echo $URL>> $MYPATH/scannedurls.txt
+	echo $URL>> $MYPATH/Results/${QUERY}_scannedurls.txt
 #	echo $DIGEST >> $MYPATH/digestdb.txt
 	rm $MYPATH/Results/$REPORTFILE
 
@@ -195,9 +203,13 @@ echo " "
 
 done
  
-sort -u -o digestdb.txt $MYPATH/digestdb.txt
-sort -u -o scannedurls.txt $MYPATH/scannedurls.txt
+#sort -u -o digestdb.txt $MYPATH/digestdb.txt
+sort -u -o $MYPATH/Results/${QUERY}_scannedurls.txt $MYPATH/Results/${QUERY}_scannedurls.txt
 rm $MYPATH/Results/$ALLURLS
 
 echo " "
-echo " ####### JOB FINISHED ########"
+echo " ####### JOB FINISHED -  `date` ########"
+echo " "
+echo "-------------------------------------------------------------------"
+echo " "
+echo " "
