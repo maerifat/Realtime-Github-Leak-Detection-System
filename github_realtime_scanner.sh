@@ -107,16 +107,17 @@ echo "####### SCANNING HAS BEGUN ####### "
 
 for URL in `cat $MYPATH/Results/$ALLURLS`
 do
-curl -s $URL -L> $MYPATH/Results/$TEMPCONTENT
+#curl -s $URL -L> $MYPATH/Results/$TEMPCONTENT
 
-DIGEST=`sha256sum $MYPATH/Results/$TEMPCONTENT |cut -d " " -f 1`
-rm $MYPATH/Results/$TEMPCONTENT
-DEVELOPER=$(echo $URL|cut -d "/"   -f4,3,4,1 )
+#DIGEST=`sha256sum $MYPATH/Results/$TEMPCONTENT |cut -d " " -f 1`
+#rm $MYPATH/Results/$TEMPCONTENT
+DEVELOPER=$(echo $URL|cut -d "/"   -f1,2,3,4 )
+#echo "Developer is $DEVELOPER"
 REPORTFILE=${RANDOM}${RANDOM}_instantreport_`date +"%Y-%m-%d"`.txt
 
 
 #echo "$DEVELOPER is developer"
-if (`grep -Fxq $URL $MYPATH/scannedurls.txt` && `grep -Fxq $DIGEST $MYPATH/digestdb.txt`)   || `grep -iq $URL blacklist.txt`
+if `grep -Fxq $URL $MYPATH/scannedurls.txt`  || `grep -iq $DEVELOPER  $MYPATH/blacklist.txt`
 then
         echo "$URL has been alreay Scanned" 
 
@@ -144,7 +145,7 @@ else
 
 
 	#Sending report only if Significant findings
-        if (($FINDINGSCOUNT <2222))
+        if (($FINDINGSCOUNT >0))
 	then 
 
 
@@ -158,8 +159,8 @@ else
 
 		cat $MYPATH/Results/$REPORTFILE|awk -F "->" '$0 ~ "\] URL:" \
 		{$0="<em>&nbsp;</em><div style=\"color:blue;font-size:20px;background-color:gold;text-decoration: underline;padding: 5px\">"$0"</div></br>";print $0};\
-		$0 ~ "->" {$1="<em>&nbsp;</em><span style=\"color:green;font-size:25px\">"$1"</span>->";};\
-		$0 ~ "->" {$2="<span style=\"color:red;font-size:25px\">"$2"</span></br>";\
+		$0 ~ "->" {$1="<em>&nbsp;</em><span style=\"color:green;font-size:20px\">"$1"</span>->";};\
+		$0 ~ "->" {$2="<span style=\"color:red;font-size:20px\">"$2"</span></br>";\
 		print}'>$MYPATH/Results/$REPORTFILEHTML
 
 		cat $MYPATH/template.html $MYPATH/Results/$REPORTFILEHTML > $MYPATH/Results/$REPORTFILEHTMLFINAL
@@ -171,17 +172,23 @@ else
 		##Report uploading and report passing to slack.
 		aws s3 cp $MYPATH/Results/$REPORTFILEPDF s3://appsec-js-scanner/
 		REPORTURL=$(aws s3 presign s3://appsec-js-scanner/$REPORTFILEPDF --expires-in 604800)
-        	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY $DEVELOPEREMAIL
+#        	python3 $MYPATH/abusereporter.py $DEVELOPER $FILEURL $FINDINGSCOUNT $REPORTURL $QUERY $DEVELOPEREMAIL
+
+		
+		#Removing Result files
+		rm $MYPATH/Results/$REPORTFILE
+		rm  $MYPATH/Results/$REPORTFILEHTML
+		rm $MYPATH/Results/$REPORTFILEHTMLFINAL
+		rm $MYPATH/Results/$REPORTFILEPDF
+
+
+
 	fi
 
 	echo "$FINDINGSCOUNT are the total findings"
 	echo $URL>> $MYPATH/scannedurls.txt
-	echo $DIGEST >> $MYPATH/digestdb.txt
+#	echo $DIGEST >> $MYPATH/digestdb.txt
 	rm $MYPATH/Results/$REPORTFILE
-	rm  $MYPATH/Results/$REPORTFILEHTML
-	rm $MYPATH/Results/$REPORTFILEHTMLFINAL
-	rm $MYPATH/Results/$REPORTFILEPDF
-	
 
 fi
 echo " "
