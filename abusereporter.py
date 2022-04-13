@@ -3,7 +3,7 @@ import sys
 import random
 import requests
 if __name__ == '__main__':
-    url = "https://hooks.slack.com/services/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"
+    url = "https://hooks.slack.com/services/T02EGFZJEN6/B02NV1X9KCZ/AdkxcaUUluW4icxxxxxxxx"
     developerurl = sys.argv[1]
     fileurl =sys.argv[2]
     findingscount= sys.argv[3]
